@@ -1,28 +1,49 @@
-import os
+import asyncio
+import logging
 from pyrogram import Client, filters
 
-# Environment variables se data utha rahe hain (jo aap Render par set karenge)
-api_id = int(os.environ.get("API_ID"))
-api_hash = os.environ.get("API_HASH")
-bot_token = os.environ.get("BOT_TOKEN")
-main_chat = int(os.environ.get("MAIN_CHAT_ID"))
-private_chat = int(os.environ.get("PRIVATE_CHAT_ID"))
+logging.basicConfig(level=logging.INFO)
 
-app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+# Hardcoded Credentials
+API_ID = 38398715
+API_HASH = "6d70a41fbc67908aad547a31c3cfa9c3a"
+BOT_TOKEN = "8842108955:AAHJyPa7PjCSmOM7HdYbSl3NzdK8ckgdfWE"
 
-# 1. Main Channel se message copy karke Private Group mein bhejega
-@app.on_message(filters.chat(main_chat))
+# Chat IDs
+MAIN_CHAT_ID = -1004352725251
+PRIVATE_CHAT_ID = -1004290323694
+
+app = Client(
+    "auto_relay_bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
+
+# 1. Main Channel se query receive karke Private Group me bhejega
+@app.on_message(filters.chat(MAIN_CHAT_ID) & ~filters.bot)
 async def forward_to_private(client, message):
-    await message.copy(private_chat)
-    print("Main channel se message private group mein bhej diya!")
+    try:
+        await message.copy(chat_id=PRIVATE_CHAT_ID)
+        logging.info("Query forwarded to Private Group.")
+    except Exception as e:
+        logging.error(f"Error forwarding to private: {e}")
 
-# 2. Private Group se response (Auto-filter ka) wapas Main Channel mein bhejega
-@app.on_message(filters.chat(private_chat))
-async def forward_to_channel(client, message):
-    # Sirf tabhi bhejega agar message kisi bot (Auto-filter) ne bheja hai
-    if message.from_user and message.from_user.is_bot:
-        await message.copy(main_chat)
-        print("Auto-filter ka response main channel mein bhej diya!")
+# 2. Private Group se Auto Filter bot ka response wapas Main Channel me bhejega
+@app.on_message(filters.chat(PRIVATE_CHAT_ID))
+async def forward_to_main(client, message):
+    try:
+        if message.from_user and message.from_user.is_bot:
+            await message.copy(chat_id=MAIN_CHAT_ID)
+            logging.info("Response sent back to Main Chat.")
+    except Exception as e:
+        logging.error(f"Error forwarding to main: {e}")
 
-print("Bot chal gaya hai...")
-app.run()
+async def main():
+    async with app:
+        logging.info("Bot is active and running...")
+        await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+    
