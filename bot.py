@@ -1,17 +1,17 @@
+import os
 import asyncio
 import logging
 from pyrogram import Client, filters
 
 logging.basicConfig(level=logging.INFO)
 
-# Hardcoded Credentials
-API_ID = 38398715
-API_HASH = "6d70a41fbc67908aad547a31c3cfa9c3a"
-BOT_TOKEN = "8842108955:AAHJyPa7PjCSmOM7HdYbSl3NzdK8ckgdfWE"
+# Render ke Environment Variables se values fetch hongi
+API_ID = int(os.environ.get("API_ID", 0))
+API_HASH = os.environ.get("API_HASH", "")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# Chat IDs
-MAIN_CHAT_ID = -1004352725251
-PRIVATE_CHAT_ID = -1004290323694
+MAIN_CHAT_ID = int(os.environ.get("MAIN_CHAT_ID", 0))
+PRIVATE_CHAT_ID = int(os.environ.get("PRIVATE_CHAT_ID", 0))
 
 app = Client(
     "auto_relay_bot",
@@ -41,7 +41,7 @@ async def forward_to_main(client, message):
 
 async def main():
     async with app:
-        logging.info("Bot is active and running...")
+        logging.info("Bot successfully started and running on Render!")
         await asyncio.Event().wait()
 
 if __name__ == "__main__":
